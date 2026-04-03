@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Health Quiz</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .step { display: none; margin: 20px; font-family: sans-serif; }
+        .active { display: block; }
+        small { color: gray; }
+        input { padding: 8px; margin-top: 10px; width: 200px; border-radius: 5px; border: 1px solid #ccc; }
+        button { padding: 8px 15px; cursor: pointer; margin-top: 10px; border-radius: 5px; }
+        
+        /* Loader Styling */
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; justify-content: center;
+            align-items: center; color: white; flex-direction: column;
+        }
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50; border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+    <span>❤️</span>
+    <span>💊</span>
+    <span>🫀</span>
+    <span>🧠</span>
+    <span>🏃‍♂️</span>
+    <span>🥗</span>
+</div>
+    <img src="{{ url_for('static', filename='logo.png') }}" width="80">
+
+<div class="container">
+    <h2>Health Assessment</h2>
+
+    <div style="width: 100%;">
+        <div style="background: #ff93f8; border-radius: 10px;">
+            <div id="progressBar" style="height: 10px; width: 0%; background: #4CAF50; border-radius: 10px;"></div>
+        </div>
+        <p id="progressText">Step 1 of 8</p>
+    </div>
+
+    <form action="/predict" method="post">
+
+        <div class="step active">
+            <p>Pregnancies (0–10)</p>
+            <small>Number of times pregnant</small><br>
+            <input type="number" name="pregnancies" required><br>
+            <button type="button" onclick="nextStep()">Next</button>
+        </div>
+
+        <div class="step">
+            <p>Glucose (mg/dL)</p>
+            <small>Normal: 70–140</small><br>
+            <input type="number" name="glucose" required><br>
+            <button type="button" onclick="nextStep()">Next</button>
+        </div>
+
+        <div class="step">
+            <p>Blood Pressure (mmHg)</p>
+            <small>Normal: 80–120</small><br>
+            <input type="number" name="bloodpressure" required><br>
+            <button type="button" onclick="nextStep()">Next</button>
+        </div>
+
+        <div class="step">
+            <p>Skin Thickness (mm)</p>
+            <small>Typical: 10–50</small><br>
+            <input type="number" name="skinthickness" required><br>
+            <button type="button" onclick="nextStep()">Next</button>
+        </div>
+
+        <div class="step">
+            <p>Insulin (mu U/ml)</p>
+            <small>Normal: 16–166</small><br>
+            <input type="number" name="insulin" required><br>
+            <button type="button" onclick="nextStep()">Next</button>
+        </div>
+
+        <div class="step">
+            <p>BMI</p>
+            <small>Normal: 18.5–24.9</small><br>
+            <input type="number" step="any" name="bmi" required><br>
+            <button type="button" onclick="nextStep()">Next</button>
+        </div>
+
+        <div class="step">
+            <p>Diabetes Pedigree Function</p>
+            <small>Family history risk (e.g., 0.47)</small><br>
+            <input type="number" step="0.01" name="dpf" required placeholder="e.g. 0.47"><br>
+            <button type="button" onclick="nextStep()">Next</button>
+        </div>
+
+        <div class="step">
+            <p>Age</p>
+            <small>Range: 1–100</small><br>
+            <input type="number" name="age" required><br>
+            <button type="submit">Submit Result</button>
+        </div>
+
+    </form>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <p>Analyzing your health...</p>
+    </div>
+</div>
+
+<script>
+let currentStep = 0;
+const steps = document.querySelectorAll(".step");
+const progressBar = document.getElementById("progressBar");
+const progressText = document.getElementById("progressText");
+
+function showStep(index) {
+    steps.forEach((step, i) => {
+        step.classList.toggle("active", i === index);
+        if (i === index) {
+            const input = step.querySelector("input");
+            if (input) setTimeout(() => input.focus(), 100);
+        }
+    });
+    updateProgress();
+}
+
+function updateProgress() {
+    const progress = ((currentStep + 1) / steps.length) * 100;
+    progressBar.style.width = progress + "%";
+    progressText.innerText = `Step ${currentStep + 1} of ${steps.length}`;
+}
+
+function nextStep() {
+    const currentInput = steps[currentStep].querySelector('input');
+    
+    if (!currentInput.value) {
+        alert("Please fill this field");
+        return;
+    }
+
+    if (currentStep < steps.length - 1) {
+        currentStep++;
+        showStep(currentStep);
+    }
+}
+
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+        const currentInput = steps[currentStep].querySelector('input');
+        if (currentStep === steps.length - 1) return; // Allow form submit on last step
+
+        event.preventDefault();
+        if (!currentInput.value) {
+            alert("Please fill this field");
+            return;
+        }
+        nextStep();
+    }
+});
+
+showStep(currentStep);
+
+document.querySelector("form").addEventListener("submit", function() {
+    document.getElementById("loader").style.display = "flex";
+});
+</script>
+</body>
+</html>

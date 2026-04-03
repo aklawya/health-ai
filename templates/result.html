@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Health Prediction Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        .container { 
+            max-width: 600px;
+            margin: 30px auto; 
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .chart-container { 
+            width: 95%;
+            margin: 0 auto; 
+            padding: 10px;
+        }
+
+        canvas {
+            box-shadow: 0px 0px 20px rgba(255,255,255,0.2);
+            border-radius: 15px;
+        }
+
+        .risk-box {
+            margin: 10px 0;
+            font-size: 18px;
+        }
+        .badge {
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-left: 10px;
+    color: white;
+}
+.high { background-color: #ff4d4d; }    /* Red */
+.medium { background-color: #ffcc00; }  /* Yellow/Orange */
+.low { background-color: #4dff88; color: black; } /* Green */
+
+/* List styling for suggestions */
+ul {
+    text-align: left;
+    display: inline-block;
+    color: white;
+}
+li { margin-bottom: 8px; }
+
+/* Button styling */
+button {
+    padding: 10px 20px;
+    margin: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
+button:hover { opacity: 0.8; }
+.suggestion-item {
+    background: rgba(255, 255, 255, 0.15);
+    margin: 8px 0;
+    padding: 10px;
+    border-radius: 10px;
+    color: white;
+    font-size: 14px;
+    border-left: 4px solid #4dff88; /* Green left border */
+    text-align: left;
+}
+
+h1, h2, h3 {
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.risk-box {
+    color: white;
+    font-weight: bold;
+}
+    </style>
+</head>
+
+<body>
+    <div class="bg-animation">
+    <span>❤️</span>
+    <span>💊</span>
+    <span>🫀</span>
+    <span>🧠</span>
+    <span>🏃‍♂️</span>
+    <span>🥗</span>
+</div>
+    <img src="{{ url_for('static', filename='logo.png') }}" width="80">
+
+<div class="container">
+
+    <h1>Health Risk Dashboard</h1>
+
+    <!-- Individual Risks -->
+    <div class="risk-box">
+    🩸 Diabetes: {{ (diabetes * 100)|round(2) }}%
+
+    {% if diabetes > 0.6 %}
+        <span class="badge high">HIGH</span>
+    {% elif diabetes > 0.3 %}
+        <span class="badge medium">MEDIUM</span>
+    {% else %}
+        <span class="badge low">LOW</span>
+    {% endif %}
+</div>
+    <div class="risk-box">
+    ❤️ heart: {{ (heart * 100)|round(2) }}%
+
+    {% if heart > 0.6 %}
+        <span class="badge high">HIGH</span>
+    {% elif heart > 0.3 %}
+        <span class="badge medium">MEDIUM</span>
+    {% else %}
+        <span class="badge low">LOW</span>
+    {% endif %}
+</div>
+    <div class="risk-box">
+    ⚖️ obesity: {{ (obesity * 100)|round(2) }}%
+
+    {% if obesity > 0.6 %}
+        <span class="badge high">HIGH</span>
+    {% elif obesity > 0.3 %}
+        <span class="badge medium">MEDIUM</span>
+    {% else %}
+        <span class="badge low">LOW</span>
+    {% endif %}
+</div>
+
+    <!-- Risk Warnings -->
+    {% if diabetes > 0.6 %}
+        <p style="color:#ff4d4d;">⚠ High Diabetes Risk</p>
+    {% endif %}
+
+    {% if heart > 0.6 %}
+        <p style="color:#ffcc00;">⚠ Heart Risk</p>
+    {% endif %}
+
+    {% if obesity > 0.6 %}
+        <p style="color:#4dff88;">⚠ Obesity Risk</p>
+    {% endif %}
+
+    <!-- Chart -->
+    <div class="chart-container">
+        <canvas id="multiChart"></canvas>
+    </div>
+
+    <!-- Suggestions -->
+    <h3>Suggestions:</h3>
+    <div style="text-align:left; margin-top:20px;">
+
+{% for s in suggestions %}
+    <div class="suggestion-item">
+        ✔ {{ s }}
+    </div>
+{% endfor %}
+
+</div>
+
+    <br>
+    <a href="/form"><button>Check Again</button></a>
+    <a href="/download">
+    <button>Download Report</button>
+</a>
+
+</div>
+
+<script>
+const diabetes = {{ (diabetes * 100)|round(2) }};
+const heart = {{ (heart * 100)|round(2) }};
+const obesity = {{ (obesity * 100)|round(2) }};
+
+const ctx = document.getElementById('multiChart').getContext('2d');
+
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Diabetes', 'Heart Disease', 'Obesity'],
+        datasets: [{
+            label: 'Risk %',
+            data: [diabetes, heart, obesity],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(54, 162, 235, 0.8)',
+                'rgba(255, 206, 86, 0.8)'
+            ],
+            borderColor: 'white',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        animation: {
+            duration: 1500,
+            easing: 'easeOutBounce'
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: { color: 'white' }
+            },
+            x: {
+                ticks: { color: 'white' }
+            }
+        },
+        plugins: {
+            legend: {
+                labels: { color: 'white' }
+            }
+        }
+    }
+});
+</script>
+
+</body>
+</html>
